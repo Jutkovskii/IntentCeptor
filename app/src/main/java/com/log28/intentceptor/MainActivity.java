@@ -63,7 +63,9 @@ public class MainActivity extends AppCompatActivity {
             uri=intent.getData();
         }
         else {
-            uri=(Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            Bundle bundle=intent.getExtras();
+           Set<String> keys= bundle.keySet();
+            uri=(Uri) intent.getParcelableExtra((String) keys.toArray()[0]);
             if(uri==null)
                 uri=intent.getData();
         }
@@ -71,40 +73,62 @@ public class MainActivity extends AppCompatActivity {
         return uri;
     }
 
-    public Uri checkFileUri(Uri uri){
+    public Intent checkFileUri(Intent intent){
 
-        String filePath = null;
 
-        if (uri != null && "content".equals(uri.getScheme())) {
-            Cursor cursor = this.getContentResolver().query(uri, new String[] { android.provider.MediaStore.Images.ImageColumns.DATA }, null, null, null);
-            cursor.moveToFirst();
-            filePath = cursor.getString(0);
-            cursor.close();
-        } else {
-            filePath = uri.getPath();
-        }
-
-        File tempFile;
-        if(uri.toString().contains("file:///")) {
-            //File tempFile = new File(uri.getPath());
-           tempFile = new File(uri.getPath().substring(uri.getPath().lastIndexOf("//") + 1));
-        }
-        else {
-            tempFile =new File(filePath);
-        }
         try {
-            Uri imageUri = FileProvider.getUriForFile(
-                    MainActivity.this,
-                    "com.log28.intentceptor", //(use your app signature + ".provider" )
-                    tempFile);
-            uri = imageUri;
-        } catch (Exception e) {
+            Intent newIntent = new Intent();
+            newIntent.setAction(intent.getAction());
+            if (uri.toString().contains("file:///")) {
+
+                File tempFile;
+                //File tempFile = new File(uri.getPath());
+                tempFile = new File(uri.getPath().substring(uri.getPath().lastIndexOf("//") + 1));
+
+
+                Uri localUri = FileProvider.getUriForFile(
+                        MainActivity.this,
+                        "com.log28.intentceptor", //(use your app signature + ".provider" )
+                        tempFile);
+
+                if (intent.getAction() == Intent.ACTION_SEND) {//||intent.getAction()==Intent.ACTION_VIEW){
+
+                    newIntent.putExtra(Intent.EXTRA_STREAM, localUri);
+                    newIntent.setType(typeName);
+                } else {
+   /*           String val="";
+        String key="";
+        try{
+                  Set<String> keys = savedIntent.getExtras().keySet();
+            Object o = savedIntent.getExtras().get((String) keys.toArray()[0]);
+            val=o.toString();
+            key=(String) keys.toArray()[0];
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }*/
+              /*  newIntent.putExtra(key,val);
+                newIntent.setDataAndType(localUri,typeName);*/
+
+
+                    newIntent.setDataAndType(localUri, typeName);
+                    newIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    //newIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file:/" + uri.getEncodedPath()));
+
+                }
+                intent=newIntent;
+            }
+
+        }
+
+        catch (Exception e) {
             e.printStackTrace();
         }
 
 
 
-    return  uri;
+
+    return intent;
     }
     public String getCategories(Intent intent){
         if(intent.getCategories()==null) return "null";
@@ -142,9 +166,12 @@ public class MainActivity extends AppCompatActivity {
                 newIntent.setComponent(null);
             }
 */
+
          Intent   newIntent=(Intent) savedIntent.clone();
+            newIntent=checkFileUri(newIntent);
             newIntent.setComponent(null);
 newIntent.addCategory(Intent.CATEGORY_DEFAULT);
+
 
 
             {
