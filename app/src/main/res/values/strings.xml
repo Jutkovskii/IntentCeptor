@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">IntentCeptor</string>
+    <dimen name="margin">16dp</dimen>
+</resources>
