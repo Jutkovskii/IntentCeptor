@@ -1,5 +1,6 @@
 package com.log28.intentceptor;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -181,6 +182,29 @@ newIntent.addCategory(Intent.CATEGORY_DEFAULT);
         catch (Exception e){
             e.printStackTrace();
             Toast.makeText(this,"Пересылка не удалась",Toast.LENGTH_LONG);
+        }
+    }
+
+    public void onRequest(View v){
+        Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        photoPickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
+        photoPickerIntent.setType("*/*");
+        //Запускаем переход с ожиданием обратного результата в виде информации об изображении:
+        startActivityForResult(photoPickerIntent, 123);//посмотреть, как нынче надо
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==123){
+            Intent   newIntent=(Intent) data.clone();
+            newIntent=checkFileUri(newIntent);
+            newIntent.setComponent(null);
+            //newIntent.addCategory(Intent.CATEGORY_DEFAULT);
+            //newIntent.setType("application/vnd.android.package-archive");
+            newIntent.setAction(Intent.ACTION_VIEW);
+            startActivity(newIntent);
         }
     }
 }
